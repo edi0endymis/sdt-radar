@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雷达侦测 · 信号检测论交互实验</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23071a10' stroke='%234ef08a' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%234ef08a'/%3E%3Cline x1='16' y1='16' x2='26' y2='8' stroke='%234ef08a' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="logo">◉</span>
+    <h1>雷达侦测 <span class="subtitle">信号检测论(SDT)交互实验</span></h1>
+    <span class="badge">工程心理学 · 作业一</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ 屏幕一:任务简报 + 参数设置 ============ -->
+<section id="screen-setup" class="screen active">
+
+  <div class="brief card">
+    <h2>任务简报</h2>
+    <p>
+      你是某防空雷达站的操作员,负责监控一片空域。每一次雷达回波刷新(<b>试次 trial</b>),
+      屏幕上都会出现一片<strong class="c-noise">杂波(noise)</strong>;有时其中会混入一个
+      <strong class="c-signal">敌机回波(signal)</strong>。你需要在每一帧中尽快判断并报告:
+      <b>「有目标」</b>还是<b>「无目标」</b>。
+    </p>
+    <p class="dim">
+      敌机回波与杂波在亮度上存在重叠 —— 越弱的敌机越难与杂波区分。
+      信号强度服从 N(d′, 1),杂波强度服从 N(0, 1);d′ 越小,两分布重叠越多,任务越难。
+    </p>
+  </div>
+
+  <div class="outcomes card">
+    <h2>四种结果的实际含义</h2>
+    <div class="outcome-grid">
+      <div class="outcome hit">
+        <div class="outcome-name">命中 Hit</div>
+        <div class="outcome-cond">有敌机 → 报告「有」</div>
+        <div class="outcome-desc">成功预警,引导拦截,保卫领空。</div>
+      </div>
+      <div class="outcome miss">
+        <div class="outcome-name">漏报 Miss</div>
+        <div class="outcome-cond">有敌机 → 报告「无」</div>
+        <div class="outcome-desc">敌机突防,可能造成重大损失 —— 最严重的失误。</div>
+      </div>
+      <div class="outcome fa">
+        <div class="outcome-name">虚报 FA</div>
+        <div class="outcome-cond">无敌机 → 报告「有」</div>
+        <div class="outcome-desc">虚警拉响,浪费拦截弹药与战备资源。</div>
+      </div>
+      <div class="outcome cr">
+        <div class="outcome-name">正确拒斥 CR</div>
+        <div class="outcome-cond">无敌机 → 报告「无」</div>
+        <div class="outcome-desc">正确放行,维持正常战备秩序。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="params card">
+    <h2>实验参数</h2>
+    <form id="param-form" onsubmit="return false;">
+      <div class="param-row">
+        <label for="in-trials">每局试次数 N <span class="hint">(要求 ≥ 20)</span></label>
+        <input type="number" id="in-trials" min="20" max="200" step="5" value="30">
+      </div>
+      <div class="param-row">
+        <label for="in-prior">信号先验概率 P(S)<output id="out-prior">0.50</output></label>
+        <input type="range" id="in-prior" min="0.1" max="0.9" step="0.05" value="0.5">
+      </div>
+      <div class="param-row">
+        <label>难度(信号可辨度 d′)</label>
+        <div class="difficulty">
+          <label><input type="radio" name="dprime" value="2.5"> 简单 d′=2.5</label>
+          <label><input type="radio" name="dprime" value="1.5" checked> 中等 d′=1.5</label>
+          <label><input type="radio" name="dprime" value="0.8"> 困难 d′=0.8</label>
+          <label><input type="radio" name="dprime" value="custom"> 自定义</label>
+          <input type="range" id="in-dprime-custom" min="0.2" max="4" step="0.1" value="1.0" disabled>
+          <output id="out-dprime-custom">1.0</output>
+        </div>
+      </div>
+      <div class="param-row">
+        <label for="in-stim">刺激呈现时长<output id="out-stim">1000 ms</output></label>
+        <input type="range" id="in-stim" min="300" max="2500" step="100" value="1000">
+      </div>
+      <div class="param-row">
+        <label for="in-resp">作答时限<output id="out-resp">2500 ms</output></label>
+        <input type="range" id="in-resp" min="800" max="5000" step="100" value="2500">
+      </div>
+      <div class="param-row checkbox-row">
+        <label><input type="checkbox" id="in-feedback" checked> 每试次后显示即时反馈</label>
+        <label><input type="checkbox" id="in-sound"> 音效提示(击中/警报声)</label>
+      </div>
+      <button type="button" id="btn-start" class="btn btn-primary">开始侦测 ▸</button>
+      <p class="hint center">操作:按 <kbd>F</kbd> = 有目标,按 <kbd>J</kbd> = 无目标(也可点击屏幕按钮)</p>
+    </form>
+  </div>
+</section>
+
+<!-- ============ 屏幕二:检测游戏 ============ -->
+<section id="screen-game" class="screen">
+  <div class="game-layout">
+    <div class="radar-wrap card">
+      <div class="radar-hud">
+        <span id="hud-trial">试次 0 / 30</span>
+        <span id="hud-phase" class="phase">待机</span>
+        <span id="hud-clock" class="clock">--</span>
+      </div>
+      <div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+      <canvas id="radar" width="560" height="560" aria-label="雷达屏幕"></canvas>
+      <div id="feedback-flash" class="feedback-flash"></div>
+    </div>
+
+    <aside class="game-side">
+      <div class="card decision">
+        <h3>你的判断?</h3>
+        <button id="btn-yes" class="btn btn-yes">有目标 <kbd>F</kbd></button>
+        <button id="btn-no" class="btn btn-no">无目标 <kbd>J</kbd></button>
+        <div class="resp-deadline"><div id="resp-bar" class="resp-bar"></div></div>
+      </div>
+      <div class="card live-counts">
+        <h3>本局实时统计</h3>
+        <table>
+          <tr><td>命中 H</td><td id="lc-h">0</td></tr>
+          <tr><td>漏报 M</td><td id="lc-m">0</td></tr>
+          <tr><td>虚报 FA</td><td id="lc-fa">0</td></tr>
+          <tr><td>正确拒斥 CR</td><td id="lc-cr">0</td></tr>
+        </table>
+      </div>
+      <div class="card mini-info">
+        <div id="mini-params"></div>
+        <button id="btn-abort" class="btn btn-ghost">中止本局</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 屏幕三:结果与分析 ============ -->
+<section id="screen-results" class="screen">
+  <div class="card">
+    <h2>本局结果</h2>
+    <div id="result-warning" class="warning" hidden></div>
+    <div class="metrics">
+      <div class="metric"><div class="m-label">击中率 P(H)</div><div class="m-value" id="r-phit">—</div></div>
+      <div class="metric"><div class="m-label">虚报率 P(FA)</div><div class="m-value" id="r-pfa">—</div></div>
+      <div class="metric"><div class="m-label">感受性 d′</div><div class="m-value" id="r-dprime">—</div></div>
+      <div class="metric"><div class="m-label">判断标准 c</div><div class="m-value" id="r-crit">—</div></div>
+      <div class="metric"><div class="m-label">似然比 β</div><div class="m-value" id="r-beta">—</div></div>
+      <div class="metric"><div class="m-label">准确率</div><div class="m-value" id="r-acc">—</div></div>
+    </div>
+    <div class="confusion">
+      <table class="conf-table">
+        <tr><th></th><th>报告「有目标」</th><th>报告「无目标」</th></tr>
+        <tr><th>实际:有信号</th><td id="c-h" class="hit-cell">0</td><td id="c-m" class="miss-cell">0</td></tr>
+        <tr><th>实际:无信号</th><td id="c-fa" class="fa-cell">0</td><td id="c-cr" class="cr-cell">0</td></tr>
+      </table>
+      <div id="r-meta" class="r-meta"></div>
+    </div>
+    <p id="r-interpret" class="interpret"></p>
+  </div>
+
+  <div class="card">
+    <h2>交互式概念可视化 <span class="hint">(加分项)</span></h2>
+    <p class="dim">
+      噪声分布 N(0,1) 与信号分布 N(d′,1);拖动滑块观察重叠区域与判别准则的移动。
+      图中虚线为<b>本局实测</b>准则位置,实线为滑块设定的<b>假想</b>准则。
+    </p>
+    <canvas id="viz-dist" width="880" height="360"></canvas>
+    <div class="viz-controls">
+      <label>假想准则 c′ <input type="range" id="viz-c" min="-3" max="3" step="0.05" value="0"><output id="viz-c-out">0.00</output></label>
+      <label>假想 d′ <input type="range" id="viz-d" min="0" max="4" step="0.05" value="1.5"><output id="viz-d-out">1.50</output></label>
+      <label><input type="checkbox" id="viz-measured" checked> 叠加本局实测值</label>
+    </div>
+    <div id="viz-readout" class="viz-readout"></div>
+  </div>
+
+  <div class="card">
+    <h2>ROC 曲线</h2>
+    <p class="dim">理论 ROC(对当前假想 d′)与实测工作点 (P(FA), P(H))。工作点高于机会线 = 具备区分能力。</p>
+    <canvas id="viz-roc" width="420" height="420"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>试次日志</h2>
+    <details><summary>展开查看每一试次</summary>
+      <div class="log-scroll"><table id="trial-log" class="log-table"></table></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>多局对比 <span class="hint">(历史记录保存在本机浏览器)</span></h2>
+    <table id="history-table" class="history-table"></table>
+    <button id="btn-clear-history" class="btn btn-ghost">清空历史</button>
+  </div>
+
+  <div class="result-actions">
+    <button id="btn-again" class="btn btn-primary">同参数再来一局</button>
+    <button id="btn-setup" class="btn">调整参数</button>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <p>信号检测论交互实验 · 雷达操作员场景 | 纯前端实现,可离线运行 | <span id="foot-params"></span></p>
+</footer>
+
+<script src="js/sdt.js"></script>
+<script src="js/viz.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

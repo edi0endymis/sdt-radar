@@ -1,0 +1,17 @@
+# Render Blueprint:一键部署为静态站点(Static Site)
+# Render 后台 New → Blueprint → 选择本仓库即可生效
+services:
+  - type: web
+    name: sdt-radar
+    runtime: static
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
